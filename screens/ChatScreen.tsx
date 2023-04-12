@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { createMessage, getMessages } from "../firebase";
 
 const API_URL =
   "https://us-central1-judith-beck.cloudfunctions.net/getResponseToMessage";
@@ -23,6 +24,28 @@ type TMessage = {
 const ChatScreen = () => {
   const [messages, setMessages] = useState<TMessage[]>([]);
   const [inputText, setInputText] = useState("");
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  useEffect(() => {
+    fetchMessages();
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [messages]);
+
+  const fetchMessages = async () => {
+    try {
+      const messages = await getMessages();
+      setMessages(messages);
+    } catch (error: any) {
+      console.error(error);
+    }
+  };
 
   const sendMessage = async () => {
     try {
@@ -34,8 +57,13 @@ const ChatScreen = () => {
         text: inputText.trim(),
       };
 
+      createMessage(newMessage);
+
       setMessages((prevMessages) => [...prevMessages, newMessage]);
       setInputText("");
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
 
       const response = await fetch(API_URL, {
         method: "POST",
@@ -45,7 +73,6 @@ const ChatScreen = () => {
         body: JSON.stringify({ message: newMessage.text }),
       });
       const { response: botResponse } = await response.json();
-      console.log("botResponse", botResponse);
 
       const botMessage: TMessage = {
         id: Date.now().toString(),
@@ -53,7 +80,12 @@ const ChatScreen = () => {
         text: botResponse,
       };
 
+      createMessage(botMessage);
+
       setMessages((prevMessages) => [...prevMessages, botMessage]);
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
     } catch (error: any) {
       console.error(error);
     }
@@ -62,6 +94,7 @@ const ChatScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
+        ref={scrollViewRef}
         style={styles.chatContainer}
         contentContainerStyle={styles.chatContent}
       >
@@ -122,6 +155,7 @@ const styles = StyleSheet.create({
   chatContent: {
     flexGrow: 1,
     justifyContent: "flex-end",
+    paddingBottom: 20,
   },
   message: {
     borderRadius: 12,
@@ -164,7 +198,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
     marginBottom: 8,
     maxHeight: 100,
-    backgroundColor: "#fff"
+    backgroundColor: "#fff",
   },
   sendButton: {
     backgroundColor: "#007AFF",
