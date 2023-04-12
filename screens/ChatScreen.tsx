@@ -44,7 +44,6 @@ const ChatScreen = () => {
         },
         body: JSON.stringify({ message: newMessage.text }),
       });
-      console.log("response", response);
       const { response: botResponse } = await response.json();
       console.log("botResponse", botResponse);
 
@@ -159,16 +158,17 @@ const styles = StyleSheet.create({
     flex: 1,
     borderWidth: 1,
     borderColor: "#e1e1e1",
-    borderRadius: 24,
+    borderRadius: 6,
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 12,
     marginRight: 8,
     marginBottom: 8,
     maxHeight: 100,
+    backgroundColor: "#fff"
   },
   sendButton: {
     backgroundColor: "#007AFF",
-    borderRadius: 24,
+    borderRadius: 6,
     paddingHorizontal: 16,
     paddingVertical: 8,
     marginBottom: 8,

@@ -1,15 +1,11 @@
-import React, { useState, useEffect } from "react";
-import { auth } from "../firebase";
+import { useNavigation } from "@react-navigation/native";
 import {
   createUserWithEmailAndPassword,
-  EmailAuthProvider,
-  linkWithCredential,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
 } from "firebase/auth";
-import { useNavigation } from "@react-navigation/native";
+import React, { useState } from "react";
 import {
-  Image,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -20,6 +16,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import { auth } from "../firebase";
 
 const AuthScreen = () => {
   const [email, setEmail] = useState("");
@@ -64,12 +61,13 @@ const AuthScreen = () => {
 
   return (
     <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-      <SafeAreaView>
+      <SafeAreaView style={{ flex: 1, justifyContent: "center" }}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ paddingHorizontal: 20 }}
         >
           <View>
-            <View>
+            <View style={{ marginBottom: 20 }}>
               <TextInput
                 value={email}
                 onChangeText={setEmail}
@@ -77,7 +75,14 @@ const AuthScreen = () => {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 returnKeyType="next"
-                testID="EmailInput"
+                style={{
+                  borderWidth: 1,
+                  borderColor: "#e1e1e1",
+                  borderRadius: 8,
+                  padding: 12,
+                  marginBottom: 10,
+                  backgroundColor: "#fff"
+                }}
               />
               <TextInput
                 value={password}
@@ -85,24 +90,57 @@ const AuthScreen = () => {
                 placeholder="Password"
                 returnKeyType="done"
                 autoCapitalize="none"
-                testID="PasswordInput"
+                style={{
+                  borderWidth: 1,
+                  borderColor: "#e1e1e1",
+                  borderRadius: 8,
+                  padding: 12,
+                  backgroundColor: "#fff"
+                }}
                 secureTextEntry
               />
             </View>
-            <View>
-              <TouchableOpacity onPress={signUp} disabled={loading}>
-                <Text>Sign Up</Text>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "flex-end",
+              }}
+            >
+              <TouchableOpacity
+                onPress={signUp}
+                disabled={loading}
+                style={{
+                  backgroundColor: "#007AFF",
+                  borderRadius: 8,
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
+                  marginHorizontal: 5,
+                }}
+              >
+                <Text style={{ color: "#fff" }}>Sign Up</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={signIn} disabled={loading}>
-                <Text>Log In</Text>
+              <TouchableOpacity
+                onPress={signIn}
+                disabled={loading}
+                style={{
+                  backgroundColor: "#fff",
+                  borderRadius: 8,
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
+                  marginLeft: 5,
+                  borderWidth: 1,
+                  borderColor: "#007AFF",
+                }}
+              >
+                <Text style={{ color: "#444" }}>Log In</Text>
               </TouchableOpacity>
             </View>
-            <View>
+            <View style={{ marginTop: 20, alignItems: "flex-end" }}>
               <TouchableOpacity
                 onPress={handlePasswordReset}
                 disabled={loading}
               >
-                <Text>Forgot password?</Text>
+                <Text style={{ color: "#666" }}>Forgot password?</Text>
               </TouchableOpacity>
             </View>
           </View>
