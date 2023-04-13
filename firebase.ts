@@ -9,7 +9,7 @@ import {
   orderBy,
   query,
 } from "firebase/firestore";
-import { NewMessage, TMessage } from "judith/types";
+import { ChatMessage, MessageBase } from "judith/types";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCmv2F5uK1aoyhkFMawZIo_94c1ovd09Uk",
@@ -24,7 +24,7 @@ export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
-export const createMessage = async (message: NewMessage) => {
+export const createMessage = async (message: MessageBase) => {
   if (!auth.currentUser) {
     console.error("No user logged in");
     return;
@@ -38,7 +38,7 @@ export const createMessage = async (message: NewMessage) => {
   return messageRef;
 };
 
-export const getMessages = async (): Promise<TMessage[]> => {
+export const getMessages = async (): Promise<ChatMessage[]> => {
   if (!auth.currentUser) {
     console.error("No user logged in");
     return [];
@@ -52,6 +52,6 @@ export const getMessages = async (): Promise<TMessage[]> => {
   const messagesSnapshot = await getDocs(messagesQuery);
   return messagesSnapshot.docs.map((doc) => ({
     id: doc.id,
-    ...(doc.data() as NewMessage),
+    ...(doc.data() as MessageBase),
   }));
 };

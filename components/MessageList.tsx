@@ -1,9 +1,9 @@
 import { useScrollToEnd } from "judith/hooks/useScrollToEnd";
-import { TMessage } from "judith/types";
+import { ChatMessage } from "judith/types";
 import React from "react";
 import { ScrollView, Text, View } from "react-native";
 
-export const MessageList = ({ messages }: { messages: TMessage[] }) => {
+export const MessageList = ({ messages }: { messages: ChatMessage[] }) => {
   const scrollViewRef = useScrollToEnd([messages]);
 
   return (
