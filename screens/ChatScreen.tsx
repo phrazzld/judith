@@ -1,3 +1,5 @@
+import { createMessage, getMessages } from "judith/firebase";
+import { countWords } from "judith/utils";
 import React, { useEffect, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -10,7 +12,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { createMessage, getMessages } from "../firebase";
 
 const API_URL =
   "https://us-central1-judith-beck.cloudfunctions.net/getResponseToMessage";
@@ -57,6 +58,33 @@ const ChatScreen = () => {
         text: inputText.trim(),
       };
 
+      // Helper function to count words in a string
+
+      const reversedMessages = [...messages].reverse();
+      let contextMessages: { role: "assistant" | "user"; content: string }[] =
+        [];
+      let totalWords = countWords(inputText.trim());
+
+      for (const message of reversedMessages) {
+        const messageContent: { role: "assistant" | "user"; content: string } =
+          {
+            role: message.sender === "bot" ? "assistant" : "user",
+            content: message.text,
+          };
+        const messageWords = countWords(message.text);
+
+        if (totalWords + messageWords > 1000) break;
+
+        totalWords += messageWords;
+        contextMessages.unshift(messageContent);
+      }
+
+      // Add the new user message to the context
+      contextMessages.push({
+        role: "user",
+        content: inputText.trim(),
+      });
+
       createMessage(newMessage);
 
       setMessages((prevMessages) => [...prevMessages, newMessage]);
@@ -70,7 +98,7 @@ const ChatScreen = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ message: newMessage.text }),
+        body: JSON.stringify({ messages: contextMessages }),
       });
       const { response: botResponse } = await response.json();
 
