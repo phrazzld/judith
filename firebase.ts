@@ -9,6 +9,7 @@ import {
   orderBy,
   query,
 } from "firebase/firestore";
+import { NewMessage, TMessage } from "judith/types";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCmv2F5uK1aoyhkFMawZIo_94c1ovd09Uk",
@@ -22,17 +23,6 @@ const firebaseConfig = {
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-
-type TMessage = {
-  id: string;
-  sender: "user" | "bot";
-  text: string;
-};
-
-type NewMessage = {
-  sender: "user" | "bot";
-  text: string;
-};
 
 export const createMessage = async (message: NewMessage) => {
   if (!auth.currentUser) {
