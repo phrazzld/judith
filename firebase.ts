@@ -38,14 +38,12 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 
 export const createMessage = async (message: MessageBase) => {
-  debug("createMessage");
   if (!auth.currentUser) {
     console.error("No user logged in");
     return;
   }
 
   const userRef = doc(db, "users", auth.currentUser.uid);
-  debug("userRef:", userRef)
 
   const messageRef = await addDoc(collection(userRef, "messages"), {
     ...message,
@@ -55,7 +53,6 @@ export const createMessage = async (message: MessageBase) => {
 };
 
 export const getMessages = async (): Promise<ChatMessage[]> => {
-  debug("getMessages");
   if (!auth.currentUser) {
     console.error("No user logged in");
     return [];

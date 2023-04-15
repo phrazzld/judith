@@ -5,6 +5,7 @@ import { countWords } from "judith/utils";
 import { useEffect, useState } from "react";
 
 export const useChat = () => {
+  const [isSending, setIsSending] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
 
   useEffect(() => {
@@ -33,6 +34,7 @@ export const useChat = () => {
   const sendMessage = async (inputText: string) => {
     try {
       if (inputText.trim().length === 0) return;
+      setIsSending(true);
 
       const newMessage: ChatMessage = {
         id: Date.now().toString(),
@@ -48,10 +50,12 @@ export const useChat = () => {
       await sendBotMessage(contextMessages, setMessages);
     } catch (error: any) {
       console.error(error);
+    } finally {
+      setIsSending(false);
     }
   };
 
-  return { messages, sendMessage };
+  return { messages, sendMessage, isSending };
 };
 
 const prepareContextMessages = (

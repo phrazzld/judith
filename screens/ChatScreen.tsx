@@ -10,12 +10,11 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { Button, Text } from "react-native-paper";
+import { ActivityIndicator, Button, Text } from "react-native-paper";
 
 // TODO: Scroll to end when text input is selected
-// TODO: Disable send button while waiting for a response
 const ChatScreen = () => {
-  const { messages, sendMessage } = useChat();
+  const { messages, sendMessage, isSending } = useChat();
   const scrollViewRef = useScrollToEnd([messages]);
   const [inputText, setInputText] = useState("");
 
@@ -42,7 +41,7 @@ const ChatScreen = () => {
               style={{
                 backgroundColor:
                   message.sender === "bot" ? COLORS.lightGray : COLORS.primary,
-                borderRadius: 5,
+                borderRadius: 10,
                 padding: 10,
                 margin: 10,
                 maxWidth: "80%",
@@ -52,6 +51,21 @@ const ChatScreen = () => {
               <Text>{message.text}</Text>
             </View>
           ))}
+          {isSending && (
+            <View
+              key={"sending"}
+              style={{
+                backgroundColor: COLORS.lightGray,
+                borderRadius: 10,
+                padding: 10,
+                margin: 10,
+                maxWidth: "80%",
+                alignSelf: "flex-start",
+              }}
+            >
+              <ActivityIndicator animating={true} color={COLORS.primary} />
+            </View>
+          )}
         </ScrollView>
         <View
           style={{
@@ -64,7 +78,7 @@ const ChatScreen = () => {
           <TextInput
             style={{
               backgroundColor: COLORS.lightGray,
-              borderRadius: 5,
+              borderRadius: 10,
               padding: 10,
               flex: 1,
               marginRight: 10,
@@ -81,10 +95,9 @@ const ChatScreen = () => {
           <Button
             onPress={handleSend}
             mode="contained"
-            disabled={inputText.trim().length === 0}
-            style={{ backgroundColor: COLORS.primary }}
+            disabled={inputText.trim().length === 0 || isSending}
           >
-            <Text style={{ fontWeight: "500" }}>Send</Text>
+            Send
           </Button>
         </View>
       </KeyboardAvoidingView>
