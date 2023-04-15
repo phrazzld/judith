@@ -1,7 +1,7 @@
 import { API_URL } from "judith/constants";
 import { auth, createMessage, getMessages } from "judith/firebase";
 import { ChatMessage, GPTChatMessage } from "judith/types";
-import { countWords } from "judith/utils";
+import { debug, countWords } from "judith/utils";
 import { useEffect, useState } from "react";
 
 export const useChat = () => {
@@ -13,6 +13,7 @@ export const useChat = () => {
 
   const fetchMessages = async () => {
     try {
+      debug("fetchMessages");
       const messages = await getMessages();
       setMessages(messages);
     } catch (error: any) {
@@ -22,6 +23,7 @@ export const useChat = () => {
 
   const sendMessage = async (inputText: string) => {
     try {
+      debug("sendMessage");
       if (inputText.trim().length === 0) return;
 
       const newMessage: ChatMessage = {
@@ -48,6 +50,7 @@ const prepareContextMessages = (
   messages: ChatMessage[],
   inputText: string
 ): GPTChatMessage[] => {
+  debug("prepareContextMessages");
   const reversedMessages = [...messages].reverse();
   let contextMessages: GPTChatMessage[] = [];
   let totalWords = countWords(inputText.trim());
@@ -77,6 +80,7 @@ const sendBotMessage = async (
   contextMessages: GPTChatMessage[],
   setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>
 ) => {
+  debug("sendBotMessage");
   if (!auth.currentUser) {
     console.error("User not logged in");
     return;
@@ -92,7 +96,9 @@ const sendBotMessage = async (
       messages: contextMessages,
     }),
   });
+  debug("response:", response)
   const { response: botResponse } = await response.json();
+  debug("botResponse:", botResponse)
 
   const botMessage: ChatMessage = {
     id: Date.now().toString(),

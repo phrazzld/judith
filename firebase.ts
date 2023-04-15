@@ -10,6 +10,7 @@ import {
   query,
 } from "firebase/firestore";
 import { ChatMessage, MessageBase } from "judith/types";
+import { debug } from "judith/utils"
 
 const prodConfig = {
   apiKey: "AIzaSyCmv2F5uK1aoyhkFMawZIo_94c1ovd09Uk",
@@ -37,12 +38,15 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 
 export const createMessage = async (message: MessageBase) => {
+  debug("createMessage");
   if (!auth.currentUser) {
     console.error("No user logged in");
     return;
   }
 
   const userRef = doc(db, "users", auth.currentUser.uid);
+  debug("userRef:", userRef)
+
   const messageRef = await addDoc(collection(userRef, "messages"), {
     ...message,
     createdAt: new Date(),
@@ -51,6 +55,7 @@ export const createMessage = async (message: MessageBase) => {
 };
 
 export const getMessages = async (): Promise<ChatMessage[]> => {
+  debug("getMessages");
   if (!auth.currentUser) {
     console.error("No user logged in");
     return [];
