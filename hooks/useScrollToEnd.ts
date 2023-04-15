@@ -7,7 +7,7 @@ export const useScrollToEnd = (deps: any[]) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       scrollViewRef.current?.scrollToEnd({ animated: true });
-    }, 100);
+    }, 200);
 
     return () => clearTimeout(timer);
   }, deps);

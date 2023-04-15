@@ -1,7 +1,10 @@
-import React from "react";
+import { Ionicons } from "@expo/vector-icons";
 import { createStackNavigator } from "@react-navigation/stack";
-import AuthScreen from "./AuthScreen";
-import ChatScreen from "./ChatScreen";
+import AccountScreen from "judith/screens/AccountScreen";
+import AuthScreen from "judith/screens/AuthScreen";
+import ChatScreen from "judith/screens/ChatScreen";
+import React from "react";
+import { TouchableOpacity } from "react-native";
 
 const Stack = createStackNavigator();
 
@@ -16,7 +19,26 @@ const AppNavigator = () => {
       <Stack.Screen
         name="Chat"
         component={ChatScreen}
-        options={{ title: "Chat", headerShown: false }}
+        options={({ navigation }) => ({
+          title: "Chat",
+          headerShown: true,
+          headerRight: () => (
+            <TouchableOpacity onPress={() => navigation.navigate("Account")}>
+              <Ionicons
+                name="person-circle-outline"
+                size={30}
+                color="black"
+                style={{ marginRight: 15 }}
+              />
+            </TouchableOpacity>
+          ),
+          headerLeft: () => null,
+        })}
+      />
+      <Stack.Screen
+        name="Account"
+        component={AccountScreen}
+        options={{ title: "Account" }}
       />
     </Stack.Navigator>
   );
