@@ -1,3 +1,4 @@
+import { COLORS } from "judith/colors";
 import { useChat } from "judith/hooks/useChat";
 import { useScrollToEnd } from "judith/hooks/useScrollToEnd";
 import React, { useState } from "react";
@@ -31,13 +32,16 @@ const ChatScreen = () => {
         keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
         style={{ flex: 1 }}
       >
-        <ScrollView ref={scrollViewRef} style={{ backgroundColor: "#fff" }}>
+        <ScrollView
+          ref={scrollViewRef}
+          style={{ backgroundColor: COLORS.white }}
+        >
           {messages.map((message) => (
             <View
               key={message.id}
               style={{
                 backgroundColor:
-                  message.sender === "bot" ? "#e0e0e0" : "sandybrown",
+                  message.sender === "bot" ? COLORS.lightGray : COLORS.primary,
                 borderRadius: 5,
                 padding: 10,
                 margin: 10,
@@ -59,7 +63,7 @@ const ChatScreen = () => {
         >
           <TextInput
             style={{
-              backgroundColor: "#e0e0e0",
+              backgroundColor: COLORS.lightGray,
               borderRadius: 5,
               padding: 10,
               flex: 1,
@@ -78,7 +82,7 @@ const ChatScreen = () => {
             onPress={handleSend}
             mode="contained"
             disabled={inputText.trim().length === 0}
-            style={{ backgroundColor: "sandybrown" }}
+            style={{ backgroundColor: COLORS.primary }}
           >
             <Text style={{ fontWeight: "500" }}>Send</Text>
           </Button>
