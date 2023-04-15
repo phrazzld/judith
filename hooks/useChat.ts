@@ -1,5 +1,5 @@
 import { API_URL } from "judith/constants";
-import { createMessage, getMessages } from "judith/firebase";
+import { auth, createMessage, getMessages } from "judith/firebase";
 import { ChatMessage, GPTChatMessage } from "judith/types";
 import { countWords } from "judith/utils";
 import { useEffect, useState } from "react";
@@ -77,12 +77,20 @@ const sendBotMessage = async (
   contextMessages: GPTChatMessage[],
   setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>
 ) => {
+  if (!auth.currentUser) {
+    console.error("User not logged in");
+    return;
+  }
+
   const response = await fetch(API_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ messages: contextMessages }),
+    body: JSON.stringify({
+      userId: auth.currentUser.uid,
+      messages: contextMessages,
+    }),
   });
   const { response: botResponse } = await response.json();
 
