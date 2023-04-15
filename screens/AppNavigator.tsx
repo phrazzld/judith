@@ -11,7 +11,7 @@ const AppNavigator = () => {
       <Stack.Screen
         name="Auth"
         component={AuthScreen}
-        options={{ title: "Auth" }}
+        options={{ title: "Auth", headerShown: false }}
       />
       <Stack.Screen
         name="Chat"

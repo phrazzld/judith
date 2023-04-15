@@ -6,6 +6,7 @@ import {
 } from "firebase/auth";
 import React, { useState } from "react";
 import {
+  Image,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -61,10 +62,24 @@ const AuthScreen = () => {
 
   return (
     <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-      <SafeAreaView style={{ flex: 1, justifyContent: "center" }}>
+      <SafeAreaView
+        style={{ flex: 1, justifyContent: "center", backgroundColor: "#fff" }}
+      >
+        <View
+          style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+        >
+          <Image
+            source={require("judith/assets/icon.png")}
+            resizeMode="contain"
+            style={{ width: 200, height: 200, alignSelf: "center" }}
+          />
+          <View style={{ marginVertical: 10 }}>
+            <Text style={{ fontSize: 26 }}>Judith</Text>
+          </View>
+        </View>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={{ paddingHorizontal: 20 }}
+          style={{ flex: 1, paddingHorizontal: 20 }}
         >
           <View>
             <View style={{ marginBottom: 20 }}>
@@ -81,7 +96,7 @@ const AuthScreen = () => {
                   borderRadius: 8,
                   padding: 12,
                   marginBottom: 10,
-                  backgroundColor: "#fff"
+                  backgroundColor: "#fff",
                 }}
               />
               <TextInput
@@ -95,7 +110,7 @@ const AuthScreen = () => {
                   borderColor: "#e1e1e1",
                   borderRadius: 8,
                   padding: 12,
-                  backgroundColor: "#fff"
+                  backgroundColor: "#fff",
                 }}
                 secureTextEntry
               />
