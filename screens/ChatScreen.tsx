@@ -1,16 +1,56 @@
 import { COLORS } from "judith/colors";
 import { useChat } from "judith/hooks/useChat";
 import { useScrollToEnd } from "judith/hooks/useScrollToEnd";
-import React, { useState } from "react";
+import { ChatMessage } from "judith/types";
+import React, { useState, useCallback } from "react";
 import {
+  FlatList,
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
-  ScrollView,
   TextInput,
   View,
 } from "react-native";
 import { ActivityIndicator, Button, Text } from "react-native-paper";
+
+const MessageComponent = React.memo(({ message }: { message: ChatMessage }) => {
+  if (message.id === "sending") {
+    return (
+      <View
+        key={"sending"}
+        style={{
+          backgroundColor: COLORS.lightGray,
+          borderRadius: 10,
+          padding: 10,
+          margin: 10,
+          maxWidth: "80%",
+          alignSelf: "flex-start",
+        }}
+      >
+        <ActivityIndicator animating={true} color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  return (
+    <View
+      key={message.id}
+      style={{
+        backgroundColor:
+          message.sender === "bot" ? COLORS.lightGray : COLORS.primary,
+        borderWidth: message.note === "reflection" ? 1 : 0,
+        borderStyle: message.note === "reflection" ? "dashed" : "solid",
+        borderRadius: 10,
+        padding: 10,
+        margin: 10,
+        maxWidth: "80%",
+        alignSelf: message.sender === "bot" ? "flex-start" : "flex-end",
+      }}
+    >
+      <Text>{message.text}</Text>
+    </View>
+  );
+});
 
 const ChatScreen = () => {
   const { messages, sendMessage, isSending } = useChat();
@@ -23,6 +63,13 @@ const ChatScreen = () => {
     setInputText("");
   };
 
+  const renderItem = useCallback(
+    ({ item: message }: { item: ChatMessage }) => (
+      <MessageComponent message={message} />
+    ),
+    []
+  );
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <KeyboardAvoidingView
@@ -30,42 +77,20 @@ const ChatScreen = () => {
         keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
         style={{ flex: 1 }}
       >
-        <ScrollView
+        <FlatList
           ref={scrollViewRef}
+          data={
+            isSending
+              ? [...messages, { id: "sending", sender: "bot", text: "loading" }]
+              : messages
+          }
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
           style={{ backgroundColor: COLORS.white }}
-        >
-          {messages.map((message) => (
-            <View
-              key={message.id}
-              style={{
-                backgroundColor:
-                  message.sender === "bot" ? COLORS.lightGray : COLORS.primary,
-                borderRadius: 10,
-                padding: 10,
-                margin: 10,
-                maxWidth: "80%",
-                alignSelf: message.sender === "bot" ? "flex-start" : "flex-end",
-              }}
-            >
-              <Text>{message.text}</Text>
-            </View>
-          ))}
-          {isSending && (
-            <View
-              key={"sending"}
-              style={{
-                backgroundColor: COLORS.lightGray,
-                borderRadius: 10,
-                padding: 10,
-                margin: 10,
-                maxWidth: "80%",
-                alignSelf: "flex-start",
-              }}
-            >
-              <ActivityIndicator animating={true} color={COLORS.primary} />
-            </View>
-          )}
-        </ScrollView>
+          onContentSizeChange={() => scrollToEnd()}
+          onLayout={() => scrollToEnd()}
+          initialNumToRender={10}
+        />
         <View
           style={{
             flexDirection: "row",

@@ -3,6 +3,7 @@ import { useNavigation } from "@react-navigation/native";
 import { deleteUser } from "firebase/auth";
 import { COLORS } from "judith/colors";
 import { auth } from "judith/firebase";
+import { useStore } from "judith/store";
 import React from "react";
 import {
   Alert,
@@ -73,7 +74,7 @@ const AccountScreen = () => {
 };
 
 const Policies = () => {
-  /* const { setError } = useStore(); */
+  const { mindReading, setMindReading } = useStore();
 
   const goToPrivacyPolicy = () => {
     Linking.openURL(PRIVACY_POLICY_URL);
@@ -88,9 +89,10 @@ const Policies = () => {
       <TouchableOpacity
         style={styles.policyLinkContainer}
         onPress={goToPrivacyPolicy}
+        onLongPress={() => setMindReading(!mindReading)}
       >
         <FontAwesome5
-          name="lock"
+          name={mindReading ? "unlock" : "lock"}
           size={20}
           color={COLORS.black}
           style={styles.policyIcon}

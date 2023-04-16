@@ -8,9 +8,9 @@ import {
   getFirestore,
   orderBy,
   query,
+  where,
 } from "firebase/firestore";
 import { ChatMessage, MessageBase } from "judith/types";
-import { debug } from "judith/utils"
 
 const prodConfig = {
   apiKey: "AIzaSyCmv2F5uK1aoyhkFMawZIo_94c1ovd09Uk",
@@ -52,7 +52,9 @@ export const createMessage = async (message: MessageBase) => {
   return messageRef;
 };
 
-export const getMessages = async (): Promise<ChatMessage[]> => {
+export const getMessages = async (
+  mindReading: boolean
+): Promise<ChatMessage[]> => {
   if (!auth.currentUser) {
     console.error("No user logged in");
     return [];
@@ -64,8 +66,76 @@ export const getMessages = async (): Promise<ChatMessage[]> => {
     orderBy("createdAt", "asc")
   );
   const messagesSnapshot = await getDocs(messagesQuery);
-  return messagesSnapshot.docs.map((doc) => ({
+  const messages = messagesSnapshot.docs.map((doc) => ({
     id: doc.id,
     ...(doc.data() as MessageBase),
   }));
+
+  if (mindReading) {
+    const memoriesQuery = query(
+      collection(userRef, "memories"),
+      where("memoryType", "==", "judithReflection"),
+      orderBy("createdAt", "asc")
+    );
+    const memoriesSnapshot = await getDocs(memoriesQuery);
+    const memories = memoriesSnapshot.docs.map(
+      (doc) =>
+        ({
+          id: doc.id,
+          text:
+            doc.data().memory +
+            "\n\nTriggered Memories:\n\n" +
+            doc.data().triggeredMemories,
+          sender: "bot",
+          note: "reflection",
+          createdAt: doc.data().createdAt,
+        } as ChatMessage)
+    );
+
+    // Merge and sort the messages and memories arrays
+    const mergedArray = mergeSort(
+      [...messages, ...memories],
+      (a: any, b: any) => a.createdAt - b.createdAt
+    );
+    return mergedArray;
+  }
+
+  return messages;
+};
+
+export const mergeSort = <T>(
+  arr: T[],
+  compare: (a: T, b: T) => number
+): T[] => {
+  if (arr.length <= 1) {
+    return arr;
+  }
+
+  const middle = Math.floor(arr.length / 2);
+  const left = arr.slice(0, middle);
+  const right = arr.slice(middle);
+
+  return merge(mergeSort(left, compare), mergeSort(right, compare), compare);
+};
+
+const merge = <T>(
+  left: T[],
+  right: T[],
+  compare: (a: T, b: T) => number
+): T[] => {
+  let result = [];
+  let indexLeft = 0;
+  let indexRight = 0;
+
+  while (indexLeft < left.length && indexRight < right.length) {
+    if (compare(left[indexLeft], right[indexRight]) < 0) {
+      result.push(left[indexLeft]);
+      indexLeft++;
+    } else {
+      result.push(right[indexRight]);
+      indexRight++;
+    }
+  }
+
+  return result.concat(left.slice(indexLeft)).concat(right.slice(indexRight));
 };

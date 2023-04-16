@@ -1,5 +1,6 @@
 import { API_URL } from "judith/constants";
 import { auth, createMessage, getMessages } from "judith/firebase";
+import { useStore } from "judith/store";
 import { ChatMessage, GPTChatMessage } from "judith/types";
 import { countWords } from "judith/utils";
 import { useEffect, useState } from "react";
@@ -7,14 +8,15 @@ import { useEffect, useState } from "react";
 export const useChat = () => {
   const [isSending, setIsSending] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const { mindReading } = useStore();
 
   useEffect(() => {
     fetchMessages();
-  }, []);
+  }, [mindReading]);
 
   const fetchMessages = async () => {
     try {
-      const messages = await getMessages();
+      const messages = await getMessages(mindReading);
       if (messages.length > 0) {
         setMessages(messages);
       } else {
@@ -42,12 +44,15 @@ export const useChat = () => {
         text: inputText.trim(),
       };
 
-      const contextMessages = prepareContextMessages(messages, inputText);
+      const contextMessages = prepareContextMessages(
+        messages.filter((message) => message.note !== "reflection"),
+        inputText
+      );
 
       createMessage(newMessage);
       setMessages((prevMessages) => [...prevMessages, newMessage]);
 
-      await sendBotMessage(contextMessages, setMessages);
+      await sendBotMessage(contextMessages, setMessages, mindReading);
     } catch (error: any) {
       console.error(error);
     } finally {
@@ -89,7 +94,8 @@ const prepareContextMessages = (
 
 const sendBotMessage = async (
   contextMessages: GPTChatMessage[],
-  setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>
+  setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>,
+  mindReading: boolean
 ) => {
   if (!auth.currentUser) {
     console.error("User not logged in");
@@ -114,6 +120,7 @@ const sendBotMessage = async (
     text: botResponse,
   };
 
-  createMessage(botMessage);
-  setMessages((prevMessages) => [...prevMessages, botMessage]);
+  await createMessage(botMessage);
+  const messages = await getMessages(mindReading);
+  setMessages(messages);
 };

@@ -7,6 +7,7 @@ export type MessageBase = {
 // A Judith chat message
 export type ChatMessage = MessageBase & {
   id: string;
+  note?: string;
 }
 
 // Message format for the GPT Chat API
