@@ -29,7 +29,7 @@ const AppNavigator = () => {
               <Ionicons
                 name="person-circle-outline"
                 size={30}
-                color={COLORS.secondary}
+                color={COLORS.darkGray}
                 style={{ marginRight: 15 }}
               />
             </TouchableOpacity>
