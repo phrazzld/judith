@@ -12,10 +12,9 @@ import {
 } from "react-native";
 import { ActivityIndicator, Button, Text } from "react-native-paper";
 
-// TODO: Scroll to end when text input is selected
 const ChatScreen = () => {
   const { messages, sendMessage, isSending } = useChat();
-  const scrollViewRef = useScrollToEnd([messages]);
+  const { scrollViewRef, scrollToEnd } = useScrollToEnd([messages]);
   const [inputText, setInputText] = useState("");
 
   const handleSend = () => {
@@ -90,6 +89,11 @@ const ChatScreen = () => {
             numberOfLines={4}
             maxLength={1000}
             textAlignVertical="top"
+            onFocus={() => {
+              setTimeout(() => {
+                scrollToEnd();
+              }, 100);
+            }}
             scrollEnabled
           />
           <Button
