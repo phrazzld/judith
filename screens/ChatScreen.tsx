@@ -3,13 +3,14 @@ import { useChat } from "judith/hooks/useChat";
 import { useScrollToEnd } from "judith/hooks/useScrollToEnd";
 import { useStore } from "judith/store";
 import { ChatMessage } from "judith/types";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
   TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { ActivityIndicator, Button, Snackbar, Text } from "react-native-paper";
@@ -62,7 +63,6 @@ const MessageComponent = React.memo(({ message }: { message: ChatMessage }) => {
   );
 });
 
-// TODO: Add scroll to top and scroll to bottom buttons
 const ChatScreen = () => {
   const { messages, sendMessage, isSending, fetchMoreMessages, loadingMore } =
     useChat();
@@ -74,6 +74,28 @@ const ChatScreen = () => {
     if (inputText.trim().length === 0) return;
     sendMessage(inputText.trim());
     setInputText("");
+  };
+
+  const scrollY = useRef(0);
+
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  const handleScroll = (event: any) => {
+    const { y } = event.nativeEvent.contentOffset;
+    scrollY.current = y;
+    // Get the height of the screen
+    const screenHeight = event.nativeEvent.layoutMeasurement.height;
+    // Get the height of the content
+    const contentHeight = event.nativeEvent.contentSize.height;
+    // Get the scroll position
+    const scrollPosition = y;
+    // If the scroll position is at the bottom, then we are at the end
+    const isAtBottom = screenHeight + scrollPosition >= contentHeight - 20;
+    setShowScrollTop(isAtBottom);
+  };
+
+  const scrollToTop = () => {
+    scrollViewRef.current?.scrollToOffset({ offset: 0, animated: true });
   };
 
   const renderItem = useCallback(
@@ -104,6 +126,8 @@ const ChatScreen = () => {
             renderItem={renderItem}
             keyExtractor={(item) => item.id}
             style={{ backgroundColor: COLORS.white }}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
             onContentSizeChange={() => scrollToEnd()}
             onLayout={() => scrollToEnd()}
             initialNumToRender={10}
@@ -149,6 +173,22 @@ const ChatScreen = () => {
             Send
           </Button>
         </View>
+        <TouchableOpacity
+          style={{
+            position: "absolute",
+            bottom: 70,
+            right: 10,
+            backgroundColor: "rgba(0,0,0,0.2)",
+            borderRadius: 25,
+            width: 40,
+            height: 40,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+          onPress={showScrollTop ? scrollToTop : scrollToEnd}
+        >
+          <Text style={{ fontSize: 20 }}>{showScrollTop ? "↑" : "↓"}</Text>
+        </TouchableOpacity>
       </KeyboardAvoidingView>
       <Snackbar
         visible={Boolean(error)}
