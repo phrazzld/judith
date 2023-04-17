@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "judith",
+    "name": "Judith",
     "slug": "judith",
     "version": "0.0.1",
     "orientation": "portrait",
@@ -15,7 +15,9 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.moomooskycow.judith",
+      "buildNumber": "2"
     },
     "android": {
       "adaptiveIcon": {
@@ -25,6 +27,11 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "c7e97ac9-13e6-4bfc-b9c9-fe06caf057b4"
+      }
     }
   }
 }

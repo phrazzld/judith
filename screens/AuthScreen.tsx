@@ -4,6 +4,7 @@ import {
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
 } from "firebase/auth";
+import { auth } from "judith/firebase";
 import React, { useState } from "react";
 import {
   Image,
@@ -17,7 +18,6 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-import { auth } from "../firebase";
 
 const AuthScreen = () => {
   const [email, setEmail] = useState("");

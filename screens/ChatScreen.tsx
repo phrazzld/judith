@@ -77,20 +77,25 @@ const ChatScreen = () => {
         keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
         style={{ flex: 1 }}
       >
-        <FlatList
-          ref={scrollViewRef}
-          data={
-            isSending
-              ? [...messages, { id: "sending", sender: "bot", text: "loading" }]
-              : messages
-          }
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          style={{ backgroundColor: COLORS.white }}
-          onContentSizeChange={() => scrollToEnd()}
-          onLayout={() => scrollToEnd()}
-          initialNumToRender={10}
-        />
+        {messages.length > 0 && (
+          <FlatList
+            ref={scrollViewRef}
+            data={
+              isSending
+                ? [
+                    ...messages,
+                    { id: "sending", sender: "bot", text: "loading" },
+                  ]
+                : messages
+            }
+            renderItem={renderItem}
+            keyExtractor={(item) => item.id}
+            style={{ backgroundColor: COLORS.white }}
+            onContentSizeChange={() => scrollToEnd()}
+            onLayout={() => scrollToEnd()}
+            initialNumToRender={10}
+          />
+        )}
         <View
           style={{
             flexDirection: "row",
