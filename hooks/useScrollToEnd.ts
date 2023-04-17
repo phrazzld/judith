@@ -1,7 +1,8 @@
+import { ChatMessage } from "judith/types";
 import { useCallback, useEffect, useRef } from "react";
 import { FlatList } from "react-native";
 
-export const useScrollToEnd = (deps: any[]) => {
+export const useScrollToEnd = (messages: ChatMessage[]) => {
   const scrollViewRef = useRef<FlatList>(null);
 
   const scrollToEnd = useCallback(() => {
@@ -14,7 +15,7 @@ export const useScrollToEnd = (deps: any[]) => {
     }, 200);
 
     return () => clearTimeout(timer);
-  }, deps);
+  }, [messages, scrollToEnd]);
 
   return { scrollViewRef, scrollToEnd };
 };

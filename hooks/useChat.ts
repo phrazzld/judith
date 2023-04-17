@@ -1,22 +1,38 @@
 import { API_URL } from "judith/constants";
 import { auth, createMessage, getMessages } from "judith/firebase";
-import { useStore } from "judith/store";
 import { ChatMessage, GPTChatMessage } from "judith/types";
 import { countWords } from "judith/utils";
 import { useEffect, useState } from "react";
 
 export const useChat = () => {
+  const [loadingMore, setLoadingMore] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const { mindReading } = useStore();
 
   useEffect(() => {
     fetchMessages();
-  }, [mindReading]);
+  }, []);
+
+  const fetchMoreMessages = async () => {
+    if (loadingMore || messages.length <= 1) return;
+
+    setLoadingMore(true);
+    try {
+      const oldestMessage = messages[0];
+      const moreMessages = await getMessages(5, oldestMessage.createdAt);
+      if (moreMessages.length > 0) {
+        setMessages((prevMessages) => [...moreMessages, ...prevMessages]);
+      }
+    } catch (error: any) {
+      console.error(error);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   const fetchMessages = async () => {
     try {
-      const messages = await getMessages(mindReading);
+      const messages = await getMessages();
       if (messages.length > 0) {
         setMessages(messages);
       } else {
@@ -52,7 +68,7 @@ export const useChat = () => {
       createMessage(newMessage);
       setMessages((prevMessages) => [...prevMessages, newMessage]);
 
-      await sendBotMessage(contextMessages, setMessages, mindReading);
+      await sendBotMessage(contextMessages, setMessages);
     } catch (error: any) {
       console.error(error);
     } finally {
@@ -60,7 +76,7 @@ export const useChat = () => {
     }
   };
 
-  return { messages, sendMessage, isSending };
+  return { messages, sendMessage, isSending, fetchMoreMessages, loadingMore };
 };
 
 const prepareContextMessages = (
@@ -94,8 +110,7 @@ const prepareContextMessages = (
 
 const sendBotMessage = async (
   contextMessages: GPTChatMessage[],
-  setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>,
-  mindReading: boolean
+  setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>
 ) => {
   if (!auth.currentUser) {
     console.error("User not logged in");
@@ -121,6 +136,6 @@ const sendBotMessage = async (
   };
 
   await createMessage(botMessage);
-  const messages = await getMessages(mindReading);
+  const messages = await getMessages();
   setMessages(messages);
 };

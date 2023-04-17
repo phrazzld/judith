@@ -4,10 +4,13 @@ import {
   addDoc,
   collection,
   doc,
+  endBefore as endBeforeDocument,
   getDocs,
   getFirestore,
+  limitToLast,
   orderBy,
   query,
+  Timestamp,
   where,
 } from "firebase/firestore";
 import { ChatMessage, MessageBase } from "judith/types";
@@ -53,17 +56,22 @@ export const createMessage = async (message: MessageBase) => {
 };
 
 export const getMessages = async (
-  mindReading: boolean
+  pageSize: number = 5,
+  endBefore?: Timestamp
 ): Promise<ChatMessage[]> => {
   if (!auth.currentUser) {
     console.error("No user logged in");
     return [];
   }
 
+  const extendedPageSize = pageSize * 2;
+
   const userRef = doc(db, "users", auth.currentUser.uid);
   const messagesQuery = query(
     collection(userRef, "messages"),
-    orderBy("createdAt", "asc")
+    orderBy("createdAt", "asc"),
+    limitToLast(extendedPageSize),
+    ...(endBefore ? [endBeforeDocument(endBefore)] : [])
   );
   const messagesSnapshot = await getDocs(messagesQuery);
   const messages = messagesSnapshot.docs.map((doc) => ({
@@ -71,36 +79,36 @@ export const getMessages = async (
     ...(doc.data() as MessageBase),
   }));
 
-  if (mindReading) {
-    const memoriesQuery = query(
-      collection(userRef, "memories"),
-      where("memoryType", "==", "judithReflection"),
-      orderBy("createdAt", "asc")
-    );
-    const memoriesSnapshot = await getDocs(memoriesQuery);
-    const memories = memoriesSnapshot.docs.map(
-      (doc) =>
-        ({
-          id: doc.id,
-          text:
-            doc.data().memory +
-            "\n\nTriggered Memories:\n\n" +
-            doc.data().triggeredMemories,
-          sender: "bot",
-          note: "reflection",
-          createdAt: doc.data().createdAt,
-        } as ChatMessage)
-    );
+  const memoriesQuery = query(
+    collection(userRef, "memories"),
+    where("memoryType", "==", "judithReflection"),
+    orderBy("createdAt", "asc"),
+    limitToLast(extendedPageSize),
+    ...(endBefore ? [endBeforeDocument(endBefore)] : [])
+  );
+  const memoriesSnapshot = await getDocs(memoriesQuery);
+  const memories = memoriesSnapshot.docs.map(
+    (doc) =>
+      ({
+        id: doc.id,
+        text:
+          doc.data().memory +
+          "\n\nTriggered Memories:\n\n" +
+          doc.data().triggeredMemories,
+        sender: "bot",
+        note: "reflection",
+        createdAt: doc.data().createdAt,
+      } as ChatMessage)
+  );
 
-    // Merge and sort the messages and memories arrays
-    const mergedArray = mergeSort(
-      [...messages, ...memories],
-      (a: any, b: any) => a.createdAt - b.createdAt
-    );
-    return mergedArray;
-  }
+  // Merge and sort the messages and memories arrays
+  const mergedArray = mergeSort(
+    [...messages, ...memories],
+    (a: any, b: any) => a.createdAt.toMillis() - b.createdAt.toMillis()
+  );
 
-  return messages;
+  const limitedMergedArray = mergedArray.slice(-pageSize);
+  return limitedMergedArray;
 };
 
 export const mergeSort = <T>(

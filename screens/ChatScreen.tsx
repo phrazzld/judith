@@ -1,8 +1,9 @@
 import { COLORS } from "judith/colors";
 import { useChat } from "judith/hooks/useChat";
 import { useScrollToEnd } from "judith/hooks/useScrollToEnd";
+import { useStore } from "judith/store";
 import { ChatMessage } from "judith/types";
-import React, { useState, useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import {
   FlatList,
   KeyboardAvoidingView,
@@ -14,6 +15,8 @@ import {
 import { ActivityIndicator, Button, Text } from "react-native-paper";
 
 const MessageComponent = React.memo(({ message }: { message: ChatMessage }) => {
+  const { mindReading } = useStore();
+
   if (message.id === "sending") {
     return (
       <View
@@ -36,6 +39,8 @@ const MessageComponent = React.memo(({ message }: { message: ChatMessage }) => {
     <View
       key={message.id}
       style={{
+        display:
+          !mindReading && message.note === "reflection" ? "none" : "flex",
         backgroundColor:
           message.sender === "bot" ? COLORS.lightGray : COLORS.primary,
         borderWidth: message.note === "reflection" ? 1 : 0,
@@ -48,13 +53,20 @@ const MessageComponent = React.memo(({ message }: { message: ChatMessage }) => {
       }}
     >
       <Text>{message.text}</Text>
+      <Text style={{ paddingTop: 10, fontSize: 10, color: COLORS.darkGray }}>
+        {message.createdAt
+          ? new Date(message.createdAt.toDate()).toLocaleString()
+          : ""}
+      </Text>
     </View>
   );
 });
 
+// TODO: Add scroll to top and scroll to bottom buttons
 const ChatScreen = () => {
-  const { messages, sendMessage, isSending } = useChat();
-  const { scrollViewRef, scrollToEnd } = useScrollToEnd([messages]);
+  const { messages, sendMessage, isSending, fetchMoreMessages, loadingMore } =
+    useChat();
+  const { scrollViewRef, scrollToEnd } = useScrollToEnd(messages);
   const [inputText, setInputText] = useState("");
 
   const handleSend = () => {
@@ -94,6 +106,8 @@ const ChatScreen = () => {
             onContentSizeChange={() => scrollToEnd()}
             onLayout={() => scrollToEnd()}
             initialNumToRender={10}
+            onRefresh={fetchMoreMessages}
+            refreshing={loadingMore}
           />
         )}
         <View
