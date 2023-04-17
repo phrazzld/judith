@@ -13,7 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Button, Text } from "react-native-paper";
+import { Button, Snackbar, Text } from "react-native-paper";
 
 export const PRIVACY_POLICY_URL =
   "https://www.github.com/phrazzld/judith/blob/master/privacy-policy.md";
@@ -22,6 +22,7 @@ export const TERMS_OF_SERVICE_URL =
 
 const AccountScreen = () => {
   const navigation = useNavigation<any>();
+  const { error, setError } = useStore();
 
   const handleLogout = () => {
     auth.signOut();
@@ -41,13 +42,18 @@ const AccountScreen = () => {
           text: "Delete",
           style: "destructive",
           onPress: async () => {
-            const user = auth.currentUser;
-            if (!user) {
-              throw new Error("User not found");
-            }
+            try {
+              const user = auth.currentUser;
+              if (!user) {
+                throw new Error("User not found");
+              }
 
-            await deleteUser(user);
-            navigation.navigate("Auth");
+              await deleteUser(user);
+              navigation.navigate("Auth");
+            } catch (err: any) {
+              console.error(err);
+              setError(err.message);
+            }
           },
         },
       ]
@@ -69,6 +75,16 @@ const AccountScreen = () => {
         </Button>
       </View>
       <Policies />
+      <Snackbar
+        visible={Boolean(error)}
+        onDismiss={() => setError(null)}
+        action={{
+          label: "Dismiss",
+          onPress: () => setError(null),
+        }}
+      >
+        {error}
+      </Snackbar>
     </SafeAreaView>
   );
 };

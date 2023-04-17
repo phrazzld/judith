@@ -56,7 +56,7 @@ export const createMessage = async (message: MessageBase) => {
 };
 
 export const getMessages = async (
-  pageSize: number = 5,
+  pageSize: number = 7,
   endBefore?: Timestamp
 ): Promise<ChatMessage[]> => {
   if (!auth.currentUser) {

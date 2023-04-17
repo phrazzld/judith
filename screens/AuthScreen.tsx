@@ -5,6 +5,7 @@ import {
   signInWithEmailAndPassword,
 } from "firebase/auth";
 import { auth } from "judith/firebase";
+import { useStore } from "judith/store";
 import React, { useState } from "react";
 import {
   Image,
@@ -18,12 +19,14 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import { Snackbar } from "react-native-paper";
 
 const AuthScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState<boolean>(false);
   const navigation = useNavigation<any>();
+  const { error, setError } = useStore();
 
   const signUp = async (): Promise<void> => {
     try {
@@ -33,6 +36,7 @@ const AuthScreen = () => {
       navigation.navigate("Chat");
     } catch (err: any) {
       console.error(err);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -46,6 +50,7 @@ const AuthScreen = () => {
       navigation.navigate("Chat");
     } catch (err: any) {
       console.error(err);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -57,6 +62,7 @@ const AuthScreen = () => {
       await sendPasswordResetEmail(auth, email);
     } catch (err: any) {
       console.error(err);
+      setError(err.message);
     }
   };
 
@@ -160,6 +166,16 @@ const AuthScreen = () => {
             </View>
           </View>
         </KeyboardAvoidingView>
+        <Snackbar
+          visible={Boolean(error)}
+          onDismiss={() => setError(null)}
+          action={{
+            label: "Dismiss",
+            onPress: () => setError(null),
+          }}
+        >
+          {error}
+        </Snackbar>
       </SafeAreaView>
     </TouchableWithoutFeedback>
   );

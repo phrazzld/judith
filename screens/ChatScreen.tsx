@@ -12,7 +12,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { ActivityIndicator, Button, Text } from "react-native-paper";
+import { ActivityIndicator, Button, Snackbar, Text } from "react-native-paper";
 
 const MessageComponent = React.memo(({ message }: { message: ChatMessage }) => {
   const { mindReading } = useStore();
@@ -68,6 +68,7 @@ const ChatScreen = () => {
     useChat();
   const { scrollViewRef, scrollToEnd } = useScrollToEnd(messages);
   const [inputText, setInputText] = useState("");
+  const { error, setError } = useStore();
 
   const handleSend = () => {
     if (inputText.trim().length === 0) return;
@@ -149,6 +150,16 @@ const ChatScreen = () => {
           </Button>
         </View>
       </KeyboardAvoidingView>
+      <Snackbar
+        visible={Boolean(error)}
+        onDismiss={() => setError(null)}
+        action={{
+          label: "Dismiss",
+          onPress: () => setError(null),
+        }}
+      >
+        {error}
+      </Snackbar>
     </SafeAreaView>
   );
 };
