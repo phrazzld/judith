@@ -1,11 +1,11 @@
+import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from "expo-av";
+import { getDownloadURL, ref } from "firebase/storage";
 import { API_URL } from "judith/constants";
-import { storage, auth, createMessage, getMessages } from "judith/firebase";
+import { auth, createMessage, getMessages, storage } from "judith/firebase";
 import { useStore } from "judith/store";
 import { ChatMessage, GPTChatMessage } from "judith/types";
 import { countWords } from "judith/utils";
 import { useEffect, useState } from "react";
-import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from "expo-av";
-import { getDownloadURL, ref } from "firebase/storage";
 
 export const useChat = () => {
   const [loadingMore, setLoadingMore] = useState(false);
@@ -13,10 +13,7 @@ export const useChat = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const { setError } = useStore();
-
-  console.debug("sound:", sound)
-  console.debug("isPlaying:", isPlaying)
+  const { setError, useAudio } = useStore();
 
   useEffect(() => {
     fetchMessages();
@@ -169,9 +166,12 @@ export const useChat = () => {
       createMessage(newMessage);
       setMessages((prevMessages) => [...prevMessages, newMessage]);
 
-      const audioUrl = await sendBotMessage(contextMessages, setMessages);
-      console.debug("audioUrl:", audioUrl)
-      // If audioUrl is not null, play audio
+      const audioUrl = await sendBotMessage(
+        contextMessages,
+        setMessages,
+        useAudio
+      );
+
       if (audioUrl) {
         playSound(audioUrl);
       }
@@ -217,7 +217,8 @@ const prepareContextMessages = (
 
 const sendBotMessage = async (
   contextMessages: GPTChatMessage[],
-  setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>
+  setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>,
+  useAudio: boolean
 ) => {
   try {
     if (!auth.currentUser) {
@@ -233,6 +234,7 @@ const sendBotMessage = async (
       body: JSON.stringify({
         userId: auth.currentUser.uid,
         messages: contextMessages,
+        useAudio,
       }),
     });
     const { response: botResponse, audioUrl } = await response.json();

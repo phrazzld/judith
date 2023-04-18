@@ -13,7 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Button, Snackbar, Text } from "react-native-paper";
+import { Button, Snackbar, Switch, Text } from "react-native-paper";
 
 export const PRIVACY_POLICY_URL =
   "https://www.github.com/phrazzld/judith/blob/master/privacy-policy.md";
@@ -22,7 +22,7 @@ export const TERMS_OF_SERVICE_URL =
 
 const AccountScreen = () => {
   const navigation = useNavigation<any>();
-  const { error, setError } = useStore();
+  const { error, setError, useAudio, setUseAudio } = useStore();
 
   const handleLogout = () => {
     auth.signOut();
@@ -73,6 +73,13 @@ const AccountScreen = () => {
         >
           Delete Account
         </Button>
+        <View style={styles.audioToggle}>
+          <Text style={styles.audioToggleText}>Audio Responses</Text>
+          <Switch
+            value={useAudio}
+            onValueChange={(value) => setUseAudio(value)}
+          />
+        </View>
       </View>
       <Policies />
       <Snackbar
@@ -163,6 +170,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginLeft: 8,
     color: COLORS.black,
+  },
+  audioToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "80%",
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  audioToggleText: {
+    fontSize: 16,
   },
 });
 

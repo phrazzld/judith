@@ -5,6 +5,8 @@ type Store = {
   setError: (value: string | null) => void;
   mindReading: boolean;
   setMindReading: (value: boolean) => void;
+  useAudio: boolean;
+  setUseAudio: (value: boolean) => void;
 };
 
 export const useStore = create<Store>((set) => ({
@@ -12,4 +14,6 @@ export const useStore = create<Store>((set) => ({
   setError: (value: string | null) => set(() => ({ error: value })),
   mindReading: false,
   setMindReading: (value: boolean) => set(() => ({ mindReading: value })),
+  useAudio: false,
+  setUseAudio: (value: boolean) => set(() => ({ useAudio: value })),
 }));
