@@ -13,6 +13,7 @@ import {
   Timestamp,
   where,
 } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 import { ChatMessage, MessageBase } from "judith/types";
 
 const prodConfig = {
@@ -39,6 +40,7 @@ const firebaseConfig =
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+export const storage = getStorage(app);
 
 export const createMessage = async (message: MessageBase) => {
   if (!auth.currentUser) {

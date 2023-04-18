@@ -1,19 +1,116 @@
 import { API_URL } from "judith/constants";
-import { auth, createMessage, getMessages } from "judith/firebase";
+import { storage, auth, createMessage, getMessages } from "judith/firebase";
 import { useStore } from "judith/store";
 import { ChatMessage, GPTChatMessage } from "judith/types";
 import { countWords } from "judith/utils";
 import { useEffect, useState } from "react";
+import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from "expo-av";
+import { getDownloadURL, ref } from "firebase/storage";
 
 export const useChat = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
   const { setError } = useStore();
+
+  console.debug("sound:", sound)
+  console.debug("isPlaying:", isPlaying)
 
   useEffect(() => {
     fetchMessages();
   }, []);
+
+  // Initialize audio mode
+  useEffect(() => {
+    Audio.setAudioModeAsync({
+      playsInSilentModeIOS: true,
+      staysActiveInBackground: true,
+      interruptionModeIOS: InterruptionModeIOS.DoNotMix,
+      shouldDuckAndroid: true,
+      interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
+      playThroughEarpieceAndroid: false,
+      allowsRecordingIOS: false,
+    });
+  }, []);
+
+  // Unload sound when unmounting
+  useEffect(() => {
+    return sound
+      ? () => {
+          console.log("Unloading sound...");
+          sound.unloadAsync();
+          setIsPlaying(false);
+        }
+      : undefined;
+  }, [sound]);
+
+  const onPlaybackStatusUpdate = (playbackStatus: any) => {
+    if (!playbackStatus.isLoaded) {
+      // Update your UI for the unloaded state
+      if (playbackStatus.error) {
+        console.error(
+          `Encountered a fatal error during playback: ${playbackStatus.error}`
+        );
+      }
+    } else {
+      if (playbackStatus.isPlaying) {
+        setIsPlaying(true);
+      } else {
+        setIsPlaying(false);
+      }
+
+      // TODO: Properly handle buffering state
+      if (playbackStatus.isBuffering) {
+        //console.log("Buffering...");
+      }
+
+      // TODO: Figure out why we have to manually setSound etc
+      //       stopSound doesn't do the trick because sound is null
+      //       but playingFilename isn't? Weird
+      if (playbackStatus.didJustFinish && !playbackStatus.isLooping) {
+        console.log("Finished playing");
+        setSound(null);
+        setIsPlaying(false);
+      }
+    }
+  };
+
+  async function playSound(fileToPlay: string | null = null): Promise<void> {
+    console.log("Playing sound...");
+    try {
+      if (sound && fileToPlay !== null) {
+        console.error("Cannot play sound, another sound is already playing");
+        return;
+      }
+
+      if (sound && fileToPlay === null) {
+        console.log("Sound is loaded, resuming...");
+        sound.playAsync();
+      } else {
+        if (!fileToPlay) {
+          console.error("Cannot play sound, no filename is set");
+          return;
+        }
+
+        console.log("Sound is not loaded, loading...");
+        const filename = ref(storage, fileToPlay);
+        const uri = await getDownloadURL(filename);
+        const { sound: playbackObject } = await Audio.Sound.createAsync(
+          { uri },
+          { shouldPlay: true }
+        );
+        setSound(playbackObject);
+        // Call stopSound when audio finishes playing
+        playbackObject.setOnPlaybackStatusUpdate(onPlaybackStatusUpdate);
+      }
+    } catch (err: any) {
+      console.warn("Error playing sound:");
+      console.error(err);
+      setError(err.message);
+    }
+  }
 
   const fetchMoreMessages = async () => {
     if (loadingMore || messages.length <= 1) return;
@@ -72,7 +169,12 @@ export const useChat = () => {
       createMessage(newMessage);
       setMessages((prevMessages) => [...prevMessages, newMessage]);
 
-      await sendBotMessage(contextMessages, setMessages);
+      const audioUrl = await sendBotMessage(contextMessages, setMessages);
+      console.debug("audioUrl:", audioUrl)
+      // If audioUrl is not null, play audio
+      if (audioUrl) {
+        playSound(audioUrl);
+      }
     } catch (error: any) {
       console.error(error);
       setError(error.message);
@@ -133,7 +235,7 @@ const sendBotMessage = async (
         messages: contextMessages,
       }),
     });
-    const { response: botResponse } = await response.json();
+    const { response: botResponse, audioUrl } = await response.json();
 
     const botMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -144,6 +246,7 @@ const sendBotMessage = async (
     await createMessage(botMessage);
     const messages = await getMessages();
     setMessages(messages);
+    return audioUrl;
   } catch (err: any) {
     console.error(err);
     throw new Error(err.message);
