@@ -3,10 +3,11 @@ import { useChat } from "judith/hooks/useChat";
 import { useScrollToEnd } from "judith/hooks/useScrollToEnd";
 import { useStore } from "judith/store";
 import { ChatMessage } from "judith/types";
-import React, { useCallback, useRef, useState } from "react";
+import React, { useEffect, useCallback, useRef, useState } from "react";
 import {
   FlatList,
   KeyboardAvoidingView,
+  Keyboard,
   Platform,
   SafeAreaView,
   TextInput,
@@ -69,11 +70,38 @@ const ChatScreen = () => {
   const { scrollViewRef, scrollToEnd } = useScrollToEnd(messages);
   const [inputText, setInputText] = useState("");
   const { error, setError } = useStore();
+  const [inputContainerHeight, setInputContainerHeight] = useState(0)
+  const [keyboardHeight, setKeyboardHeight] = useState(0)
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      "keyboardDidShow",
+      (e) => {
+        setKeyboardHeight(e.endCoordinates.height)
+      }
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      "keyboardDidHide",
+      () => {
+        setKeyboardHeight(0)
+      }
+    );
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, [])
 
   const handleSend = () => {
     if (inputText.trim().length === 0) return;
     sendMessage(inputText.trim());
     setInputText("");
+  };
+
+  const handleInputContainerLayout = (event: any) => {
+    const { height } = event.nativeEvent.layout;
+    setInputContainerHeight(height);
   };
 
   const scrollY = useRef(0);
@@ -136,6 +164,7 @@ const ChatScreen = () => {
           />
         )}
         <View
+          onLayout={handleInputContainerLayout}
           style={{
             flexDirection: "row",
             alignItems: "center",
@@ -176,8 +205,8 @@ const ChatScreen = () => {
         <TouchableOpacity
           style={{
             position: "absolute",
-            bottom: 70,
             right: 10,
+            bottom: inputContainerHeight + 10 + keyboardHeight,
             backgroundColor: "rgba(0,0,0,0.2)",
             borderRadius: 25,
             width: 40,
