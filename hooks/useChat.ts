@@ -237,6 +237,13 @@ const sendBotMessage = async (
         useAudio,
       }),
     });
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error(error);
+      throw new Error(error.message);
+    }
+
     const { audioUrl } = await response.json();
     const messages = await getMessages();
     setMessages(messages);
