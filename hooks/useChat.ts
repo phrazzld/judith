@@ -237,15 +237,7 @@ const sendBotMessage = async (
         useAudio,
       }),
     });
-    const { response: botResponse, audioUrl } = await response.json();
-
-    const botMessage: ChatMessage = {
-      id: Date.now().toString(),
-      sender: "bot",
-      text: botResponse,
-    };
-
-    await createMessage(botMessage);
+    const { audioUrl } = await response.json();
     const messages = await getMessages();
     setMessages(messages);
     return audioUrl;
