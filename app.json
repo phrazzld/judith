@@ -17,7 +17,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.moomooskycow.judith",
-      "buildNumber": "4",
+      "buildNumber": "5",
       "infoPlist": {
         "UIBackgroundModes": ["audio"]
       }
