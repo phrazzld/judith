@@ -1,4 +1,5 @@
 import { COLORS } from "judith/colors";
+import { Ionicons } from "@expo/vector-icons";
 import { useChat } from "judith/hooks/useChat";
 import { useScrollToEnd } from "judith/hooks/useScrollToEnd";
 import { useStore } from "judith/store";
@@ -16,7 +17,13 @@ import {
 } from "react-native";
 import { ActivityIndicator, Button, Snackbar, Text } from "react-native-paper";
 
-const MessageComponent = React.memo(({ message }: { message: ChatMessage }) => {
+interface MessageComponentProps {
+  message: ChatMessage;
+  onRetry?: (message: ChatMessage) => void;
+}
+
+const MessageComponent = React.memo((props: MessageComponentProps) => {
+  const { message, onRetry } = props;
   const { mindReading } = useStore();
 
   if (message.id === "sending") {
@@ -39,51 +46,79 @@ const MessageComponent = React.memo(({ message }: { message: ChatMessage }) => {
 
   return (
     <View
-      key={message.id}
       style={{
-        display:
-          !mindReading && message.note === "reflection" ? "none" : "flex",
-        backgroundColor:
-          message.sender === "bot" ? COLORS.lightGray : COLORS.primary,
-        borderWidth: message.note === "reflection" ? 1 : 0,
-        borderStyle: message.note === "reflection" ? "dashed" : "solid",
-        borderRadius: 10,
-        padding: 10,
-        margin: 10,
-        maxWidth: "80%",
+        display: "flex",
+        flexDirection: "row",
         alignSelf: message.sender === "bot" ? "flex-start" : "flex-end",
       }}
     >
-      <Text>{message.text}</Text>
-      <Text style={{ paddingTop: 10, fontSize: 10, color: COLORS.darkGray }}>
-        {message.createdAt
-          ? new Date(message.createdAt.toDate()).toLocaleString()
-          : ""}
-      </Text>
+      <View
+        key={message.id}
+        style={{
+          display:
+            !mindReading && message.note === "reflection" ? "none" : "flex",
+          backgroundColor:
+            message.sender === "bot" ? COLORS.lightGray : COLORS.primary,
+          borderWidth: message.note === "reflection" ? 1 : 0,
+          borderStyle: message.note === "reflection" ? "dashed" : "solid",
+          borderRadius: 10,
+          padding: 10,
+          margin: 10,
+          maxWidth: "70%",
+          alignSelf: message.sender === "bot" ? "flex-start" : "flex-end",
+          marginRight: !!onRetry ? 0 : 10,
+        }}
+      >
+        <Text>{message.text}</Text>
+        <Text style={{ paddingTop: 10, fontSize: 10, color: COLORS.darkGray }}>
+          {message.createdAt
+            ? new Date(message.createdAt.toDate()).toLocaleString()
+            : ""}
+        </Text>
+      </View>
+      {!!onRetry && (
+        <Button
+          onPress={() => onRetry(message)}
+          style={{ alignSelf: "center", margin: 0, padding: 0 }}
+        >
+          <Ionicons
+            name="ios-refresh"
+            size={20}
+            color={COLORS.secondary}
+            style={{ margin: 0, padding: 0 }}
+          />
+        </Button>
+      )}
     </View>
   );
 });
 
+// TODO: If isSending is false but the last message is a user message, refetch messages
+// TODO: If refetch doesn't get a response, resend the user message and alert the user
 const ChatScreen = () => {
   const { messages, sendMessage, isSending, fetchMoreMessages, loadingMore } =
     useChat();
   const { scrollViewRef, scrollToEnd } = useScrollToEnd(messages);
   const [inputText, setInputText] = useState("");
   const { error, setError } = useStore();
-  const [inputContainerHeight, setInputContainerHeight] = useState(0)
-  const [keyboardHeight, setKeyboardHeight] = useState(0)
+  const [inputContainerHeight, setInputContainerHeight] = useState(0);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  const handleRetry = (message: ChatMessage) => {
+    sendMessage(message.text);
+  };
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
       "keyboardDidShow",
       (e) => {
-        setKeyboardHeight(e.endCoordinates.height)
+        setKeyboardHeight(e.endCoordinates.height);
       }
     );
     const keyboardDidHideListener = Keyboard.addListener(
       "keyboardDidHide",
       () => {
-        setKeyboardHeight(0)
+        setKeyboardHeight(0);
       }
     );
 
@@ -91,7 +126,7 @@ const ChatScreen = () => {
       keyboardDidShowListener.remove();
       keyboardDidHideListener.remove();
     };
-  }, [])
+  }, []);
 
   const handleSend = () => {
     if (inputText.trim().length === 0) return;
@@ -127,9 +162,17 @@ const ChatScreen = () => {
   };
 
   const renderItem = useCallback(
-    ({ item: message }: { item: ChatMessage }) => (
-      <MessageComponent message={message} />
-    ),
+    ({ item: message, index }: { item: ChatMessage; index: number }) => {
+      const isLastMessage = index === messages.length - 1;
+      const isUserMessage = message.sender === "user";
+      const showRetry = !isSending && isLastMessage && isUserMessage;
+
+      return showRetry ? (
+        <MessageComponent message={message} onRetry={handleRetry} />
+      ) : (
+        <MessageComponent message={message} />
+      );
+    },
     []
   );
 
