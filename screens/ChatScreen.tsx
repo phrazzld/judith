@@ -1,14 +1,14 @@
-import { COLORS } from "judith/colors";
 import { Ionicons } from "@expo/vector-icons";
+import { COLORS } from "judith/colors";
 import { useChat } from "judith/hooks/useChat";
 import { useScrollToEnd } from "judith/hooks/useScrollToEnd";
 import { useStore } from "judith/store";
 import { ChatMessage } from "judith/types";
-import React, { useEffect, useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   FlatList,
-  KeyboardAvoidingView,
   Keyboard,
+  KeyboardAvoidingView,
   Platform,
   SafeAreaView,
   TextInput,
@@ -25,6 +25,7 @@ interface MessageComponentProps {
 const MessageComponent = React.memo((props: MessageComponentProps) => {
   const { message, onRetry } = props;
   const { mindReading } = useStore();
+  const [showRetry, setShowRetry] = useState(false);
 
   if (message.id === "sending") {
     return (
@@ -66,17 +67,17 @@ const MessageComponent = React.memo((props: MessageComponentProps) => {
           margin: 10,
           maxWidth: "70%",
           alignSelf: message.sender === "bot" ? "flex-start" : "flex-end",
-          marginRight: !!onRetry ? 0 : 10,
+          marginRight: showRetry ? 0 : 10,
         }}
       >
-        <Text>{message.text}</Text>
+        <Text onLongPress={() => setShowRetry(true)}>{message.text}</Text>
         <Text style={{ paddingTop: 10, fontSize: 10, color: COLORS.darkGray }}>
           {message.createdAt
             ? new Date(message.createdAt.toDate()).toLocaleString()
             : ""}
         </Text>
       </View>
-      {!!onRetry && (
+      {!!onRetry && showRetry && (
         <Button
           onPress={() => onRetry(message)}
           style={{ alignSelf: "center", margin: 0, padding: 0 }}
@@ -162,12 +163,8 @@ const ChatScreen = () => {
   };
 
   const renderItem = useCallback(
-    ({ item: message, index }: { item: ChatMessage; index: number }) => {
-      const isLastMessage = index === messages.length - 1;
-      const isUserMessage = message.sender === "user";
-      const showRetry = !isSending && isLastMessage && isUserMessage;
-
-      return showRetry ? (
+    ({ item: message }: { item: ChatMessage }) => {
+      return message.sender === "user" ? (
         <MessageComponent message={message} onRetry={handleRetry} />
       ) : (
         <MessageComponent message={message} />
